@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mestre dos Dados - RPG Pro</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --bg: #0f0c29;
+            --panel: #1e1b4b;
+            --accent: #00d2ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            text-shadow: 0 0 10px var(--primary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .board {
+            background: rgba(30, 27, 75, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        select, input {
+            background: #2d3436;
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 10px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary), #8e44ad);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+            font-size: 1.1em;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.6);
+            filter: brightness(1.2);
+        }
+
+        button:active { transform: translateY(0); }
+
+        #dice-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            min-height: 150px;
+            perspective: 1000px;
+        }
+
+        /* ESTILO DO DADO "FÍSICO" */
+        .die {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: 900;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 
+                inset -5px -5px 10px rgba(0,0,0,0.3),
+                inset 5px 5px 10px rgba(255,255,255,0.2),
+                5px 10px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            user-select: none;
+        }
+
+        /* Animação de Rolagem */
+        .rolling {
+            animation: roll-animation 0.5s infinite;
+        }
+
+        @keyframes roll-animation {
+            0% { transform: translate(0,0) rotate(0deg) scale(1); }
+            25% { transform: translate(5px, -5px) rotate(90deg) scale(1.1); }
+            50% { transform: translate(-5px, 5px) rotate(180deg) scale(1); }
+            75% { transform: translate(5px, 5px) rotate(270deg) scale(1.1); }
+            100% { transform: translate(0,0) rotate(360deg) scale(1); }
+        }
+
+        .result-banner {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--accent);
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔮 Mestre dos Dados</h1>
+
+    <div class="board">
+        <div class="controls">
+            <div class="control-group">
+                <label>Dados</label>
+                <select id="diceType">
+                    <option value="2">D2</option>
+                    <option value="4">D4</option>
+                    <option value="6" selected>D6</option>
+                    <option value="8">D8</option>
+                    <option value="10">D10</option>
+                    <option value="12">D12</option>
+                    <option value="20">D20</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Qtd.</label>
+                <input type="number" id="diceCount" value="1" min="1" max="20" style="width: 50px;">
+            </div>
+
+            <div class="control-group">
+                <label>Cor</label>
+                <input type="color" id="diceColor" value="#6c5ce7">
+            </div>
+
+            <div class="control-group">
+                <label>Modo</label>
+                <select id="calcMode">
+                    <option value="sum">Somar</option>
+                    <option value="max">Maior</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button onclick="roll()">LANÇAR DADOS</button>
+        </div>
+
+        <div id="result-text" class="result-banner"></div>
+        
+        <div id="dice-container">
+            </div>
+    </div>
+
+    <script>
+        function roll() {
+            const container = document.getElementById('dice-container');
+            const resultBanner = document.getElementById('result-text');
+            const sides = parseInt(document.getElementById('diceType').value);
+            const count = parseInt(document.getElementById('diceCount').value);
+            const color = document.getElementById('diceColor').value;
+            const mode = document.getElementById('calcMode').value;
+
+            container.innerHTML = '';
+            resultBanner.innerText = 'Rolando...';
+
+            let rolls = [];
+
+            // Criar os dados visualmente primeiro
+            for (let i = 0; i < count; i++) {
+                const die = document.createElement('div');
+                die.className = 'die rolling';
+                die.style.backgroundColor = color;
+                die.style.color = getContrastYIQ(color);
+                die.innerText = '?';
+                container.appendChild(die);
+            }
+
+            // Simular o tempo de rolagem física
+            setTimeout(() => {
+                const dieElements = document.querySelectorAll('.die');
+                
+                dieElements.forEach((die) => {
+                    const value = Math.floor(Math.random() * sides) + 1;
+                    rolls.push(value);
+                    die.innerText = value;
+                    die.classList.remove('rolling');
+                    
+                    // Pequeno efeito de impacto ao parar
+                    die.style.transform = `rotate(${Math.floor(Math.random() * 20 - 10)}deg)`;
+                });
+
+                // Calcular resultado
+                if (mode === 'sum') {
+                    const total = rolls.reduce((a, b) => a + b, 0);
+                    resultBanner.innerText = `Total: ${total}`;
+                } else {
+                    const max = Math.max(...rolls);
+                    resultBanner.innerText = `Maior: ${max}`;
+                }
+            }, 600); // 0.6 segundos de animação
+        }
+
+        function getContrastYIQ(hexcolor){
+            hexcolor = hexcolor.replace("#", "");
+            const r = parseInt(hexcolor.substr(0,2),16);
+            const g = parseInt(hexcolor.substr(2,2),16);
+            const b = parseInt(hexcolor.substr(4,2),16);
+            const yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? '#000' : '#fff';
+        }
+    </script>
+</body>
+</html>
