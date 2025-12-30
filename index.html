@@ -3,46 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Dice Master - GitHub Edition</title>
+    <title>Vintei - Simulador de Dados</title>
     <style>
+        /* VARIÁVEIS DE CORES - MODO ESCURO (PADRÃO) */
         :root {
+            --bg-body: radial-gradient(circle at center, #1a1a2e 0%, #020205 100%);
+            --bg-panel: rgba(35, 25, 66, 0.9);
+            --text-main: #e0e0e0;
+            --text-accent: #00fbff;
             --primary: #8e44ad;
-            --accent: #00fbff;
-            --bg-dark: #0a0a12;
-            --panel-purple: rgba(35, 25, 66, 0.9);
+            --field-bg: #13131d;
+            --border: rgba(142, 68, 173, 0.4);
+            --shadow: rgba(0,0,0,0.8);
+        }
+
+        /* VARIÁVEIS DE CORES - MODO CLARO */
+        [data-theme="light"] {
+            --bg-body: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --bg-panel: rgba(255, 255, 255, 0.9);
+            --text-main: #2d3436;
+            --text-accent: #6c5ce7;
+            --primary: #a29bfe;
+            --field-bg: #ffffff;
+            --border: rgba(108, 92, 231, 0.3);
+            --shadow: rgba(0,0,0,0.1);
         }
 
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #020205 100%);
-            color: #e0e0e0;
+            background: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* BOTÃO DE TEMA */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px var(--shadow);
         }
 
         .main-container {
-            background: var(--panel-purple);
+            background: var(--bg-panel);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(142, 68, 173, 0.4);
+            border: 1px solid var(--border);
             border-radius: 30px;
             padding: 40px;
             width: 100%;
             max-width: 850px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 20px rgba(142, 68, 173, 0.2);
+            box-shadow: 0 25px 50px var(--shadow);
             text-align: center;
+            transition: background 0.5s ease;
         }
 
         h1 {
-            color: var(--accent);
+            color: var(--text-accent);
             text-transform: uppercase;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             margin-bottom: 30px;
-            font-weight: 300;
-            text-shadow: 0 0 15px rgba(0, 251, 255, 0.4);
+            font-weight: 900;
+            text-shadow: 0 0 15px rgba(108, 92, 231, 0.3);
         }
 
         .setup-bar {
@@ -50,7 +84,7 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.1);
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 30px;
@@ -65,15 +99,15 @@
         label {
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: #a29bfe;
+            color: var(--primary);
             margin-bottom: 5px;
             font-weight: bold;
         }
 
         select, input {
-            background: #13131d;
+            background: var(--field-bg);
             border: 1px solid var(--primary);
-            color: white;
+            color: var(--text-main);
             padding: 10px;
             border-radius: 6px;
             outline: none;
@@ -89,12 +123,12 @@
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 20px var(--shadow);
         }
 
         .btn-roll:hover {
             transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 15px 30px rgba(108, 92, 231, 0.4);
+            filter: brightness(1.1);
         }
 
         #result-box {
@@ -102,21 +136,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 800;
-            color: white;
             margin: 20px 0;
         }
 
-        /* FORMATOS DOS DADOS */
         #dice-table {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 25px;
-            perspective: 1000px;
+            min-height: 120px;
         }
 
+        /* DADOS GEOMÉTRICOS */
         .die {
             width: 80px;
             height: 80px;
@@ -125,8 +158,7 @@
             justify-content: center;
             font-size: 1.6rem;
             font-weight: 900;
-            position: relative;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
             transition: all 0.4s ease-out;
         }
 
@@ -134,56 +166,54 @@
         .d6 { border-radius: 12px; }
         .d8 { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
         .d10 { clip-path: polygon(50% 0%, 100% 35%, 50% 100%, 0% 35%); }
-        .d12, .d20 { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .d20 { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
 
-        /* ANIMAÇÃO DE ROLAGEM FISICA */
-        .is-rolling {
-            animation: phys-roll 0.6s ease-out forwards;
-        }
+        .is-rolling { animation: phys-roll 0.6s ease-out forwards; }
 
         @keyframes phys-roll {
             0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-            50% { transform: scale(1.2) rotate(90deg); }
             100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
 
-        /* EFEITO CRÍTICO */
         .critical {
-            animation: crit-glow 1s infinite alternate;
+            animation: crit-glow 0.8s infinite alternate;
             z-index: 10;
+            border: 2px solid gold;
         }
 
         @keyframes crit-glow {
-            from { box-shadow: 0 0 10px #fff, 0 0 20px var(--accent); transform: scale(1); }
-            to { box-shadow: 0 0 20px #fff, 0 0 40px var(--accent); transform: scale(1.1); }
+            from { filter: drop-shadow(0 0 5px gold); transform: scale(1); }
+            to { filter: drop-shadow(0 0 20px gold); transform: scale(1.1); }
         }
     </style>
 </head>
 <body>
 
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Alternar Tema</button>
+
     <div class="main-container">
-        <h1>Dice Master Pro</h1>
+        <h1>Vintei</h1>
 
         <div class="setup-bar">
             <div class="field">
                 <label>Dado</label>
                 <select id="diceType">
-                    <option value="2">D2 (Moeda)</option>
-                    <option value="4">D4 (Triângulo)</option>
-                    <option value="6" selected>D6 (Cubo)</option>
-                    <option value="8">D8 (Diamante)</option>
-                    <option value="10">D10 (Pipa)</option>
-                    <option value="12">D12 (Octo)</option>
-                    <option value="20">D20 (Esfera)</option>
+                    <option value="2">D2</option>
+                    <option value="4">D4</option>
+                    <option value="6" selected>D6</option>
+                    <option value="8">D8</option>
+                    <option value="10">D10</option>
+                    <option value="12">D12</option>
+                    <option value="20">D20</option>
                 </select>
             </div>
             <div class="field">
                 <label>Qtd</label>
-                <input type="number" id="diceQty" value="1" min="1" max="12" style="width: 50px;">
+                <input type="number" id="diceQty" value="1" min="1" max="15" style="width: 50px;">
             </div>
             <div class="field">
                 <label>Cor</label>
-                <input type="color" id="diceColor" value="#6c5ce7">
+                <input type="color" id="diceColor" value="#8e44ad">
             </div>
             <div class="field">
                 <label>Cálculo</label>
@@ -194,13 +224,24 @@
             </div>
         </div>
 
-        <button class="btn-roll" onclick="rollAll()">LANÇAR DADOS</button>
+        <button class="btn-roll" onclick="rollAll()">ROLAR AGORA</button>
 
         <div id="result-box">---</div>
         <div id="dice-table"></div>
     </div>
 
     <script>
+        // Lógica de Tema
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'light');
+            }
+        }
+
         function getShape(sides) {
             if (sides == 4) return 'd4';
             if (sides == 6 || sides == 2) return 'd6';
@@ -218,7 +259,7 @@
             const mode = document.getElementById('calcMode').value;
 
             container.innerHTML = '';
-            resultBox.innerText = 'Rolando...';
+            resultBox.innerText = 'Sorteando...';
             
             let results = [];
             const shapeClass = getShape(sides);
@@ -229,27 +270,27 @@
 
                 const die = document.createElement('div');
                 die.className = `die ${shapeClass} is-rolling`;
+                
+                // Brilho dourado se tirar o valor máximo (Vintei!)
                 if (val === sides && sides > 2) die.classList.add('critical');
                 
                 die.style.backgroundColor = color;
                 die.style.color = getContrastYIQ(color);
                 die.innerText = val;
                 
-                // Rotação aleatória para parecer que caiu na mesa
-                const randomRot = Math.floor(Math.random() * 30 - 15);
+                const randomRot = Math.floor(Math.random() * 20 - 10);
                 die.style.transform = `rotate(${randomRot}deg)`;
 
                 container.appendChild(die);
             }
 
-            // Exibir resultado final
             setTimeout(() => {
                 if (mode === 'sum') {
                     const total = results.reduce((a, b) => a + b, 0);
-                    resultBox.innerHTML = `TOTAL: <span style="color:var(--accent)">${total}</span>`;
+                    resultBox.innerHTML = `RESULTADO: <span style="color:var(--text-accent)">${total}</span>`;
                 } else {
                     const max = Math.max(...results);
-                    resultBox.innerHTML = `MAIOR: <span style="color:var(--accent)">${max}</span>`;
+                    resultBox.innerHTML = `MÁXIMO: <span style="color:var(--text-accent)">${max}</span>`;
                 }
             }, 600);
         }
