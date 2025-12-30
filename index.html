@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Dados RPG</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .controls {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        select, input {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: #ecf0f1;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #d35400;
+        }
+
+        #result-area {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .dice-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .die {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: roll 0.4s ease-out;
+        }
+
+        @keyframes roll {
+            from { transform: rotate(-45deg) scale(0.5); opacity: 0; }
+            to { transform: rotate(0) scale(1); opacity: 1; }
+        }
+
+        .total {
+            font-size: 1.5em;
+            margin-top: 10px;
+            color: #f1c40f;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎲 Simulador de Dados</h2>
+
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label>Tipo de Dado:</label>
+                <select id="diceType">
+                    <option value="2">D2 (Moeda)</option>
+                    <option value="4">D4</option>
+                    <option value="6" selected>D6</option>
+                    <option value="8">D8</option>
+                    <option value="10">D10</option>
+                    <option value="12">D12</option>
+                    <option value="20">D20</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Quantidade de Dados:</label>
+                <input type="number" id="diceCount" value="1" min="1" max="50">
+            </div>
+
+            <div class="control-group">
+                <label>Cor do Dado:</label>
+                <input type="color" id="diceColor" value="#e74c3c">
+            </div>
+
+            <div class="control-group">
+                <label>Modo de Cálculo:</label>
+                <select id="calcMode">
+                    <option value="sum">Somar Resultados</option>
+                    <option value="max">Pegar o Maior Valor</option>
+                </select>
+            </div>
+
+            <button onclick="rollDice()">Rolar Dados!</button>
+        </div>
+
+        <div id="result-area">
+            <div id="totalDisplay" class="total"></div>
+            <div id="diceDisplay" class="dice-display"></div>
+        </div>
+    </div>
+
+    <script>
+        function rollDice() {
+            const sides = parseInt(document.getElementById('diceType').value);
+            const count = parseInt(document.getElementById('diceCount').value);
+            const color = document.getElementById('diceColor').value);
+            const mode = document.getElementById('calcMode').value;
+            
+            const diceDisplay = document.getElementById('diceDisplay');
+            const totalDisplay = document.getElementById('totalDisplay');
+            
+            diceDisplay.innerHTML = '';
+            let results = [];
+
+            // Lógica de rolagem
+            for (let i = 0; i < count; i++) {
+                const roll = Math.floor(Math.random() * sides) + 1;
+                results.push(roll);
+
+                // Criar elemento visual do dado
+                const dieDiv = document.createElement('div');
+                dieDiv.className = 'die';
+                dieDiv.style.backgroundColor = color;
+                dieDiv.style.color = getContrastYIQ(color);
+                dieDiv.innerText = roll;
+                diceDisplay.appendChild(dieDiv);
+            }
+
+            // Cálculo final
+            let finalValue;
+            if (mode === 'sum') {
+                finalValue = results.reduce((a, b) => a + b, 0);
+                totalDisplay.innerText = `Total: ${finalValue}`;
+            } else {
+                finalValue = Math.max(...results);
+                totalDisplay.innerText = `Maior Valor: ${finalValue}`;
+            }
+        }
+
+        // Função para ajustar a cor do texto (preto ou branco) dependendo do fundo
+        function getContrastYIQ(hexcolor){
+            hexcolor = hexcolor.replace("#", "");
+            var r = parseInt(hexcolor.substr(0,2),16);
+            var g = parseInt(hexcolor.substr(2,2),16);
+            var b = parseInt(hexcolor.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? 'black' : 'white';
+        }
+    </script>
+</body>
+</html>
